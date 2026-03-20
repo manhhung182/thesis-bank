@@ -1,14 +1,10 @@
 // src/pages/PublicPage.jsx
 import React, { useState, useMemo } from 'react';
 import { Badge, SimilarityBar, Button, Input, Textarea, Select, Spinner, Card, SectionHeader } from '../components/ui';
+import { FIELDS, TYPES } from '../data/constants';
 
-const TYPES = [
-  { label: 'Đồ án tốt nghiệp', value: 'do_an' },
-  { label: 'NCKH Sinh viên', value: 'nckh' },
-];
 const currentYear = new Date().getFullYear();
 const YEARS = Array.from({ length: 5 }, (_, i) => currentYear - i);
-const FIELDS = ['AI / ML', 'Web / Mobile', 'IoT / Nhúng', 'Mạng / Bảo mật', 'Khoa học dữ liệu', 'An toàn thông tin', 'Khác'];
 const FIELD_COLORS = ['#1A56DB','#0E9F6E','#F59E0B','#8B5CF6','#EF4444','#06B6D4','#F97316','#84CC16'];
 
 function StatBox({ icon, value, label, bg }) {
