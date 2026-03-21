@@ -4,6 +4,7 @@ import { Badge, Button, Spinner, Input, Textarea, Select } from './ui';
 import { useAICheck } from '../hooks/useTheses';
 import { findSimilar } from '../lib/similarity';
 import { FIELDS, TYPES } from '../data/constants';
+import { supabase } from '../lib/supabase';
 
 const STATUS_CONFIG = {
   approved:      { label: 'Đã duyệt',       color: 'green' },
@@ -260,6 +261,31 @@ export default function ThesisDetail({ thesis, allTheses, onClose, onUpdate, isA
                     {thesis.abstract}
                   </div>
                 </div>
+              )}
+
+              {thesis.file_url && isAdmin && (
+                <button
+                  onClick={async () => {
+                    const { data } = await supabase.storage
+                      .from('thesis-files')
+                      .createSignedUrl(thesis.file_url, 60);
+                    if (data?.signedUrl) window.open(data.signedUrl, '_blank');
+                  }}
+                  style={{
+                    display: 'flex', alignItems: 'center', gap: 6,
+                    padding: '8px 14px', borderRadius: 8, border: '1px solid var(--primary)',
+                    background: 'var(--primary-light)', color: 'var(--primary)',
+                    fontSize: 13, fontWeight: 600, cursor: 'pointer',
+                    fontFamily: 'inherit', marginBottom: 16,
+                  }}
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
+                    <polyline points="7 10 12 15 17 10"/>
+                    <line x1="12" y1="15" x2="12" y2="3"/>
+                  </svg>
+                  Tải file báo cáo
+                </button>
               )}
 
               {similar.length > 0 && (
