@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import { Badge, Button, Spinner, Input, Textarea, Select } from './ui';
 import { useAICheck } from '../hooks/useTheses';
 import { findSimilar } from '../lib/similarity';
+import { FIELDS, TYPES } from '../data/constants';
 
 const STATUS_CONFIG = {
   approved:      { label: 'Đã duyệt',       color: 'green' },
@@ -11,13 +12,9 @@ const STATUS_CONFIG = {
   rejected:      { label: 'Không duyệt',     color: 'red' },
 };
 
-const TYPES = [
-  { label: 'Đồ án tốt nghiệp', value: 'do_an' },
-  { label: 'NCKH Sinh viên',   value: 'nckh' },
-];
+
 const currentYear = new Date().getFullYear();
 const YEARS = Array.from({ length: 5 }, (_, i) => currentYear - i);
-const FIELDS = ['AI / ML','Web / Mobile','IoT / Nhúng','Mạng / Bảo mật','Khoa học dữ liệu','An toàn thông tin','Khác'];
 
 function DetailItem({ label, value }) {
   return (
