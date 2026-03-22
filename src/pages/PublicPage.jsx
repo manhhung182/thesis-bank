@@ -1,6 +1,7 @@
 // src/pages/PublicPage.jsx
 import React, { useState, useMemo } from 'react';
 import { Badge, SimilarityBar, Button, Input, Textarea, Select, Spinner, Card, SectionHeader } from '../components/ui';
+import ThesisDetail from '../components/ThesisDetail';
 import { FIELDS, TYPES } from '../data/constants';
 
 const currentYear = new Date().getFullYear();
@@ -27,6 +28,7 @@ export default function PublicPage({ theses, loading, onSubmit, onShowLogin }) {
   const [students, setStudents] = useState([{ full_name: '', mssv: '', class: '' }]);
   const [advisorName, setAdvisorName] = useState('');
   const [file, setFile] = useState(null);
+  const [selectedThesis, setSelectedThesis] = useState(null);
 
   const approvedTheses = useMemo(() => theses.filter(t => t.status === 'approved'), [theses]);
 
@@ -154,7 +156,12 @@ export default function PublicPage({ theses, loading, onSubmit, onShowLogin }) {
                           onMouseEnter={e => Array.from(e.currentTarget.cells).forEach(c => c.style.background = '#F9FAFB')}
                           onMouseLeave={e => Array.from(e.currentTarget.cells).forEach(c => c.style.background = '')}>
                           <td style={{ padding: '10px 14px', maxWidth: 220 }}>
-                            <div style={{ fontWeight: 600, color: '#1F2937', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{t.title}</div>
+                            <div
+                              onClick={() => { setSelectedThesis(t); setTab('theses'); }}
+                              style={{ fontWeight: 600, color: '#1A56DB', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', cursor: 'pointer' }}
+                              onMouseEnter={e => e.target.style.textDecoration = 'underline'}
+                              onMouseLeave={e => e.target.style.textDecoration = 'none'}
+                            >{t.title}</div>
                             {t.field && <div style={{ fontSize: 11, color: '#9CA3AF', marginTop: 2 }}>{t.field}</div>}
                           </td>
                           <td style={{ padding: '10px 14px', fontSize: 12, color: '#6B7280' }}>
@@ -230,7 +237,12 @@ export default function PublicPage({ theses, loading, onSubmit, onShowLogin }) {
                         onMouseEnter={e => Array.from(e.currentTarget.cells).forEach(c => c.style.background = '#F9FAFB')}
                         onMouseLeave={e => Array.from(e.currentTarget.cells).forEach(c => c.style.background = '')}>
                         <td style={{ padding: '11px 14px', maxWidth: 260 }}>
-                          <div style={{ fontWeight: 600, color: '#1F2937', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{t.title}</div>
+                          <div
+                            onClick={() => setSelectedThesis(t)}
+                            style={{ fontWeight: 600, color: '#1A56DB', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', cursor: 'pointer' }}
+                            onMouseEnter={e => e.target.style.textDecoration = 'underline'}
+                            onMouseLeave={e => e.target.style.textDecoration = 'none'}
+                          >{t.title}</div>
                           {t.field && <div style={{ fontSize: 11, color: '#9CA3AF', marginTop: 1 }}>{t.field}</div>}
                         </td>
                         <td style={{ padding: '11px 14px' }}><Badge color={t.type === 'do_an' ? 'blue' : 'gray'}>{t.type === 'do_an' ? 'Tốt nghiệp' : 'NCKH'}</Badge></td>
@@ -372,6 +384,17 @@ export default function PublicPage({ theses, loading, onSubmit, onShowLogin }) {
           </Card>
         )}
       </div>
+
+      {/* Modal xem chi tiết đề tài cho khách */}
+      {selectedThesis && (
+        <ThesisDetail
+          thesis={selectedThesis}
+          allTheses={theses}
+          onClose={() => setSelectedThesis(null)}
+          onUpdate={null}
+          isAdmin={false}
+        />
+      )}
     </div>
   );
 }
