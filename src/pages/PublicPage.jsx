@@ -161,9 +161,9 @@ export default function PublicPage({ theses, loading, onSubmit, onShowLogin }) {
                           <td style={{ padding: '10px 14px', maxWidth: 220 }}>
                             <div
                               onClick={() => { setSelectedThesis(t); setTab('theses'); }}
-                              style={{ fontWeight: 600, color: '#1A56DB', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', cursor: 'pointer' }}
-                              onMouseEnter={e => e.target.style.textDecoration = 'underline'}
-                              onMouseLeave={e => e.target.style.textDecoration = 'none'}
+                              style={{ fontWeight: 600, color: '#1F2937', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', cursor: 'pointer' }}
+                              onMouseEnter={e => { e.target.style.color = '#1A56DB'; e.target.style.textDecoration = 'underline'; }}
+                              onMouseLeave={e => { e.target.style.color = '#1F2937'; e.target.style.textDecoration = 'none'; }}
                             >{t.title}</div>
                             {t.field && <div style={{ fontSize: 11, color: '#9CA3AF', marginTop: 2 }}>{t.field}</div>}
                           </td>
@@ -242,9 +242,9 @@ export default function PublicPage({ theses, loading, onSubmit, onShowLogin }) {
                         <td style={{ padding: '11px 14px', maxWidth: 260 }}>
                           <div
                             onClick={() => setSelectedThesis(t)}
-                            style={{ fontWeight: 600, color: '#1A56DB', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', cursor: 'pointer' }}
-                            onMouseEnter={e => e.target.style.textDecoration = 'underline'}
-                            onMouseLeave={e => e.target.style.textDecoration = 'none'}
+                            style={{ fontWeight: 600, color: '#1F2937', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', cursor: 'pointer' }}
+                            onMouseEnter={e => { e.target.style.color = '#1A56DB'; e.target.style.textDecoration = 'underline'; }}
+                            onMouseLeave={e => { e.target.style.color = '#1F2937'; e.target.style.textDecoration = 'none'; }}
                           >{t.title}</div>
                           {t.field && <div style={{ fontSize: 11, color: '#9CA3AF', marginTop: 1 }}>{t.field}</div>}
                         </td>
