@@ -27,6 +27,9 @@ export default function ThesesList({ theses, loading, filterType, setFilterType,
     if (filterType === 'do_an') return t.type === 'do_an';
     if (filterType === 'nckh') return t.type === 'nckh';
     return true;
+  }).sort((a, b) => {
+    if (b.year !== a.year) return (b.year || 0) - (a.year || 0);
+    return (a.title || '').localeCompare(b.title || '', 'vi');
   });
 
   const handleApprove = async (e, id) => {

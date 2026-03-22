@@ -44,6 +44,9 @@ export default function PublicPage({ theses, loading, onSubmit, onShowLogin }) {
       t.field?.toLowerCase().includes(q);
     const matchType = filterType === 'all' || t.type === filterType;
     return matchSearch && matchType;
+  }).sort((a, b) => {
+    if (b.year !== a.year) return (b.year || 0) - (a.year || 0);
+    return (a.title || '').localeCompare(b.title || '', 'vi');
   }), [approvedTheses, search, filterType]);
 
   const fieldStats = useMemo(() => {
