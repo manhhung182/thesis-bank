@@ -60,7 +60,10 @@ export function useTheses() {
       t.allStudentNames?.some(n => n.toLowerCase().includes(q)) ||
       t.allStudentMSSV?.some(m => m.toLowerCase().includes(q)) ||
       t.field?.toLowerCase().includes(q);
-    const matchType = filterType === 'all' || t.type === filterType;
+    const matchType = filterType === 'all' 
+      filterType === 'pending' 
+      filterType === 'rejected'
+      t.type === filterType;
     const matchField = filterField === 'all' || t.field === filterField;
     return matchSearch && matchType && matchField;
   });
