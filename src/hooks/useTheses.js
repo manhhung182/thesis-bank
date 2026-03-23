@@ -61,9 +61,9 @@ export function useTheses() {
       t.allStudentMSSV?.some(m => m.toLowerCase().includes(q)) ||
       t.field?.toLowerCase().includes(q);
     const matchType = filterType === 'all' 
-      filterType === 'pending' 
-      filterType === 'rejected'
-      t.type === filterType;
+      || filterType === 'pending' 
+      || filterType === 'rejected'
+      || t.type === filterType;
     const matchField = filterField === 'all' || t.field === filterField;
     return matchSearch && matchType && matchField;
   });
