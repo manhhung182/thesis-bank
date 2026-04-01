@@ -135,9 +135,9 @@ export function useTheses() {
         const { data: existing } = await supabase.from('students').select('id').eq('mssv', extra.mssv).maybeSingle();
         if (existing) {
           studentId = existing.id;
-          await supabase.from('students').update({ full_name: extra.student, class: extra.class?.trim() || null }).eq('id', studentId);
+          await supabase.from('students').update({ full_name: extra.student, class: extra.studentClass?.trim() || null }).eq('id', studentId);
         } else {
-          const { data: newS } = await supabase.from('students').insert({ full_name: extra.student, mssv: extra.mssv, class: extra.class?.trim() || null }).select().single();
+          const { data: newS } = await supabase.from('students').insert({ full_name: extra.student, mssv: extra.mssv, class: extra.studentClass?.trim() || null }).select().single();
           if (newS) studentId = newS.id;
         }
         if (studentId) {

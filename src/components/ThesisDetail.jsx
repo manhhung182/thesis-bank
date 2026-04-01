@@ -75,7 +75,7 @@ export default function ThesisDetail({ thesis, allTheses, onClose, onUpdate, isA
         await supabase.storage.from('thesis-files').upload(path, editFile, { upsert: true });
         updates.file_url = path;
       }
-      await onUpdate(thesis.id, updates, { advisor: form.advisor, student: form.student, mssv: form.mssv, class: form.class });
+      await onUpdate(thesis.id, updates, { advisor: form.advisor, student: form.student, mssv: form.mssv, studentClass: form.class });
       setEditMode(false);
     } catch (e) {
       alert('Lỗi khi lưu: ' + e.message);
