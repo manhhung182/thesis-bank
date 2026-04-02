@@ -40,7 +40,7 @@ export default function ThesisDetail({ thesis, allTheses, onClose, onUpdate, isA
     advisor: thesis?.advisor || '',
     student: thesis?.student || '',
     mssv: thesis?.mssv || '',
-    class: thesis?.class || '',
+    studentClass: thesis?.class || '',
     budget: thesis?.budget || '',
     award: thesis?.award || '',
   });
@@ -75,7 +75,7 @@ export default function ThesisDetail({ thesis, allTheses, onClose, onUpdate, isA
         await supabase.storage.from('thesis-files').upload(path, editFile, { upsert: true });
         updates.file_url = path;
       }
-      await onUpdate(thesis.id, updates, { advisor: form.advisor, student: form.student, mssv: form.mssv, studentClass: form.class });
+      await onUpdate(thesis.id, updates, { advisor: form.advisor, student: form.student, mssv: form.mssv, studentClass: form.studentClass });
       setEditMode(false);
     } catch (e) {
       alert('Lỗi khi lưu: ' + e.message);
@@ -180,7 +180,7 @@ export default function ThesisDetail({ thesis, allTheses, onClose, onUpdate, isA
                 </div>
                 <div>
                   <label style={labelStyle}>Lớp</label>
-                  <Input value={form.class} onChange={set('class')} placeholder="D20CQCN01" />
+                  <Input value={form.studentClass} onChange={set('studentClass')} placeholder="D20CQCN01" />
                 </div>
               </div>
               <div style={{ marginBottom: 14 }}>
