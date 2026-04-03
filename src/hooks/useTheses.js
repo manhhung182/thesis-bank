@@ -123,11 +123,8 @@ export function useTheses() {
           const { data: newA } = await supabase.from('advisors').insert({ full_name: extra.advisor }).select().single();
           if (newA) advisorId = newA.id;
         }
-        const { error: delError } = await supabase.from('thesis_advisors').delete().eq('thesis_id', id);
-        if (!delError && advisorId) {
-          await supabase.from('thesis_advisors')
-            .upsert({ thesis_id: id, advisor_id: advisorId }, { onConflict: 'thesis_id,advisor_id' });
-        }
+        if (advisorId) await supabase.from('thesis_advisors')
+          .upsert({ thesis_id: id, advisor_id: advisorId }, { onConflict: 'thesis_id,advisor_id' });
       }
     }
 
