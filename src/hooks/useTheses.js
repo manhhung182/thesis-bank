@@ -37,7 +37,6 @@ export function useTheses() {
           similarity: t.similarity || 0,
         };
       });
-      // Tính similarity cho các đề tài đã duyệt
       const simMap = calcAllSimilarities(normalized);
       const withSim = normalized.map(t => ({
         ...t,
@@ -60,8 +59,8 @@ export function useTheses() {
       t.allStudentNames?.some(n => n.toLowerCase().includes(q)) ||
       t.allStudentMSSV?.some(m => m.toLowerCase().includes(q)) ||
       t.field?.toLowerCase().includes(q);
-    const matchType = filterType === 'all' 
-      || filterType === 'pending' 
+    const matchType = filterType === 'all'
+      || filterType === 'pending'
       || filterType === 'rejected'
       || t.type === filterType;
     const matchField = filterField === 'all' || t.field === filterField;
@@ -84,69 +83,90 @@ export function useTheses() {
     return newThesis;
   }, [fetchTheses]);
 
-  // Duyệt đề tài
   const approveThesis = useCallback(async (id) => {
     const { error } = await supabase.from('theses').update({ status: 'approved' }).eq('id', id);
     if (error) throw error;
     setTheses(prev => prev.map(t => t.id === id ? { ...t, status: 'approved' } : t));
   }, []);
 
-  // Từ chối đề tài (giữ lại với status rejected)
   const rejectThesis = useCallback(async (id) => {
     const { error } = await supabase.from('theses').update({ status: 'rejected' }).eq('id', id);
     if (error) throw error;
     setTheses(prev => prev.map(t => t.id === id ? { ...t, status: 'rejected' } : t));
   }, []);
 
-  // Xóa đề tài hoàn toàn
   const deleteThesis = useCallback(async (id) => {
     const { error } = await supabase.from('theses').delete().eq('id', id);
     if (error) throw error;
     setTheses(prev => prev.filter(t => t.id !== id));
   }, []);
 
-  // Cập nhật thông tin đề tài (kèm cập nhật sinh viên/GVHD nếu có)
   const updateThesis = useCallback(async (id, updates, extra = {}) => {
     const { error } = await supabase.from('theses').update(updates).eq('id', id);
     if (error) throw error;
 
-    // Cập nhật GVHD nếu có thay đổi
+    // --- Cập nhật GVHD ---
+    // FIX: Chỉ DELETE 1 lần, bỏ lần DELETE thừa thứ 2 gây 409 Conflict
     if (extra.advisor !== undefined) {
-      // Xóa liên kết cũ
       await supabase.from('thesis_advisors').delete().eq('thesis_id', id);
       if (extra.advisor?.trim()) {
         let advisorId = null;
-        const { data: existing } = await supabase.from('advisors').select('id').ilike('full_name', extra.advisor).maybeSingle();
+        const { data: existing } = await supabase
+          .from('advisors').select('id').ilike('full_name', extra.advisor.trim()).maybeSingle();
         if (existing) {
           advisorId = existing.id;
         } else {
-          const { data: newA } = await supabase.from('advisors').insert({ full_name: extra.advisor }).select().single();
+          const { data: newA } = await supabase
+            .from('advisors').insert({ full_name: extra.advisor.trim() }).select().single();
           if (newA) advisorId = newA.id;
         }
-        if (advisorId) await supabase.from('thesis_advisors')
-          .upsert({ thesis_id: id, advisor_id: advisorId }, { onConflict: 'thesis_id,advisor_id' });
+        if (advisorId) {
+          await supabase.from('thesis_advisors')
+            .upsert({ thesis_id: id, advisor_id: advisorId }, { onConflict: 'thesis_id,advisor_id' });
+        }
       }
     }
 
-    // Cập nhật sinh viên chủ nhiệm nếu có thay đổi
+    // --- Cập nhật sinh viên chủ nhiệm ---
     if (extra.student !== undefined && extra.mssv !== undefined) {
-      const { data: leaders } = await supabase.from('thesis_students').select('student_id').eq('thesis_id', id).eq('is_leader', true);
       if (extra.student?.trim() && extra.mssv?.trim()) {
+
+        // FIX: Dùng ?? thay vì ?. để tránh studentClass undefined → null âm thầm
+        // '' (user xóa trắng) → null | 'D20CQCN01' → lưu đúng giá trị
+        const studentClass = (extra.studentClass ?? '').trim() || null;
+
         let studentId = null;
-        const { data: existing } = await supabase.from('students').select('id').eq('mssv', extra.mssv).maybeSingle();
+        const { data: existing } = await supabase
+          .from('students').select('id').eq('mssv', extra.mssv.trim()).maybeSingle();
+
         if (existing) {
           studentId = existing.id;
-          await supabase.from('students').update({ full_name: extra.student, class: extra.studentClass?.trim() || null }).eq('id', studentId);
+          // FIX: throw error thay vì bỏ qua âm thầm khi update thất bại
+          const { error: updateErr } = await supabase
+            .from('students')
+            .update({ full_name: extra.student.trim(), class: studentClass })
+            .eq('id', studentId);
+          if (updateErr) throw updateErr;
         } else {
-          const { data: newS } = await supabase.from('students').insert({ full_name: extra.student, mssv: extra.mssv, class: extra.studentClass?.trim() || null }).select().single();
+          const { data: newS, error: insertErr } = await supabase
+            .from('students')
+            .insert({ full_name: extra.student.trim(), mssv: extra.mssv.trim(), class: studentClass })
+            .select().single();
+          if (insertErr) throw insertErr;
           if (newS) studentId = newS.id;
         }
+
         if (studentId) {
-          // Cập nhật hoặc thêm mới liên kết sinh viên chủ nhiệm
+          const { data: leaders } = await supabase
+            .from('thesis_students').select('student_id')
+            .eq('thesis_id', id).eq('is_leader', true);
           if (leaders?.length > 0) {
-            await supabase.from('thesis_students').update({ student_id: studentId }).eq('thesis_id', id).eq('is_leader', true);
+            await supabase.from('thesis_students')
+              .update({ student_id: studentId })
+              .eq('thesis_id', id).eq('is_leader', true);
           } else {
-            await supabase.from('thesis_students').insert({ thesis_id: id, student_id: studentId, is_leader: true });
+            await supabase.from('thesis_students')
+              .insert({ thesis_id: id, student_id: studentId, is_leader: true });
           }
         }
       }
