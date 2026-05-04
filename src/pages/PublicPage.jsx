@@ -3,6 +3,7 @@ import React, { useState, useMemo } from 'react';
 import { Badge, SimilarityBar, Button, Input, Textarea, Select, Spinner, Card, SectionHeader } from '../components/ui';
 import ThesisDetail from '../components/ThesisDetail';
 import { FIELDS, TYPES } from '../data/constants';
+import { findSimilar } from '../lib/similarity';
 
 const currentYear = new Date().getFullYear();
 const YEARS = Array.from({ length: 5 }, (_, i) => currentYear - i);
@@ -29,6 +30,30 @@ export default function PublicPage({ theses, loading, onSubmit, onShowLogin }) {
   const [advisorName, setAdvisorName] = useState('');
   const [file, setFile] = useState(null);
   const [selectedThesis, setSelectedThesis] = useState(null);
+
+  // --- Kiểm tra trùng lặp ---
+  const [checkTitle, setCheckTitle] = useState('');
+  const [checkAbstract, setCheckAbstract] = useState('');
+  const [checkKeywords, setCheckKeywords] = useState('');
+  const [checkResult, setCheckResult] = useState(null);
+
+  const handleCheck = () => {
+    if (!checkTitle && !checkAbstract) { alert('Vui lòng nhập tên đề tài hoặc tóm tắt'); return; }
+    const target = {
+      id: '__check__',
+      title: checkTitle,
+      abstract: checkAbstract,
+      keywords: checkKeywords ? checkKeywords.split(',').map(k => k.trim()) : [],
+      status: 'approved',
+    };
+    const similar = findSimilar(target, approvedTheses, 1);
+    const maxSim = similar.length > 0 ? similar[0].simScore : 0;
+    setCheckResult({ similar, maxSim });
+  };
+
+  const simColor = (s) => s >= 70 ? '#EF4444' : s >= 40 ? '#F59E0B' : '#0E9F6E';
+  const simLabel = (s) => s >= 70 ? 'Rủi ro cao' : s >= 40 ? 'Cần xem xét' : 'An toàn';
+  const simBadgeBg = (s) => s >= 70 ? '#FEF2F2' : s >= 40 ? '#FFFBEB' : '#ECFDF5';
 
   const approvedTheses = useMemo(() => theses.filter(t => t.status === 'approved'), [theses]);
 
@@ -81,6 +106,7 @@ export default function PublicPage({ theses, loading, onSubmit, onShowLogin }) {
   const TABS = [
     { id: 'dashboard', label: 'Tổng quan' },
     { id: 'theses', label: 'Kho đề tài' },
+    { id: 'check', label: '🔍 Kiểm tra trùng lặp' },
     { id: 'submit', label: 'Nộp đề tài' },
   ];
 
@@ -270,6 +296,103 @@ export default function PublicPage({ theses, loading, onSubmit, onShowLogin }) {
         )}
 
         {/* NỘP ĐỀ TÀI TAB */}
+        {/* KIỂM TRA TRÙNG LẶP TAB */}
+        {tab === 'check' && (
+          <Card>
+            <SectionHeader title="Kiểm tra trùng lặp đề tài" />
+            <div style={{ padding: 24 }}>
+              <div style={{ marginBottom: 14 }}>
+                <label style={{ fontSize: 12, fontWeight: 600, color: '#374151', display: 'block', marginBottom: 6 }}>Tên đề tài cần kiểm tra</label>
+                <Input placeholder="Nhập tên đề tài..." value={checkTitle} onChange={e => { setCheckTitle(e.target.value); setCheckResult(null); }} />
+              </div>
+              <div style={{ marginBottom: 14 }}>
+                <label style={{ fontSize: 12, fontWeight: 600, color: '#374151', display: 'block', marginBottom: 6 }}>Từ khóa (phân cách bằng dấu phẩy)</label>
+                <Input placeholder="VD: deep learning, nhận diện khuôn mặt, MTCNN" value={checkKeywords} onChange={e => { setCheckKeywords(e.target.value); setCheckResult(null); }} />
+              </div>
+              <div style={{ marginBottom: 16 }}>
+                <label style={{ fontSize: 12, fontWeight: 600, color: '#374151', display: 'block', marginBottom: 6 }}>Tóm tắt / Mô tả đề tài</label>
+                <Textarea rows={5} placeholder="Dán nội dung tóm tắt để kiểm tra độ tương đồng..." value={checkAbstract} onChange={e => { setCheckAbstract(e.target.value); setCheckResult(null); }} />
+              </div>
+
+              <Button variant="primary" onClick={handleCheck} style={{ width: '100%', justifyContent: 'center', padding: 11 }}>
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                Kiểm tra trùng lặp ({approvedTheses.length} đề tài trong kho)
+              </Button>
+
+              {checkResult && (
+                <div style={{ marginTop: 20 }}>
+                  {/* Kết quả tổng quát */}
+                  <div style={{ background: simBadgeBg(checkResult.maxSim), border: `1px solid ${simColor(checkResult.maxSim)}30`, borderRadius: 12, padding: 18, marginBottom: 18, display: 'flex', alignItems: 'center', gap: 20 }}>
+                    <div style={{ textAlign: 'center', flexShrink: 0 }}>
+                      <div style={{ fontSize: 36, fontWeight: 800, color: simColor(checkResult.maxSim), lineHeight: 1 }}>{checkResult.maxSim}%</div>
+                      <div style={{ fontSize: 11, color: simColor(checkResult.maxSim), fontWeight: 600, marginTop: 4 }}>{simLabel(checkResult.maxSim)}</div>
+                    </div>
+                    <div style={{ flex: 1 }}>
+                      <div style={{ height: 8, background: 'rgba(0,0,0,.08)', borderRadius: 4, overflow: 'hidden', marginBottom: 8 }}>
+                        <div style={{ width: checkResult.maxSim + '%', height: '100%', background: simColor(checkResult.maxSim), borderRadius: 4, transition: 'width .6s ease' }} />
+                      </div>
+                      <div style={{ fontSize: 13, color: '#374151' }}>
+                        {checkResult.maxSim === 0 && 'Không tìm thấy đề tài tương đồng trong kho.'}
+                        {checkResult.maxSim > 0 && checkResult.maxSim < 40 && 'Đề tài có độ tương đồng thấp với các đề tài trong kho. Có thể tiến hành.'}
+                        {checkResult.maxSim >= 40 && checkResult.maxSim < 70 && 'Đề tài có một số điểm tương đồng. Cần xem xét kỹ và làm rõ điểm khác biệt.'}
+                        {checkResult.maxSim >= 70 && 'Đề tài có độ tương đồng cao với đề tài trong kho. Cần điều chỉnh hướng nghiên cứu.'}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Danh sách đề tài tương đồng */}
+                  {checkResult.similar.length > 0 ? (
+                    <div>
+                      <div style={{ fontSize: 12, fontWeight: 700, color: '#6B7280', textTransform: 'uppercase', letterSpacing: '.5px', marginBottom: 12 }}>
+                        Đề tài tương đồng ({checkResult.similar.length})
+                      </div>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                        {checkResult.similar.map((t, i) => (
+                          <div key={t.id} style={{ padding: '14px 16px', border: `1px solid ${simColor(t.simScore)}40`, borderRadius: 10, background: '#fff', borderLeft: `4px solid ${simColor(t.simScore)}` }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12, marginBottom: 8 }}>
+                              <div style={{ flex: 1 }}>
+                                <span style={{ fontSize: 11, fontWeight: 700, color: '#9CA3AF', marginRight: 6 }}>#{i + 1}</span>
+                                <span style={{ fontSize: 13, fontWeight: 600, color: '#111827' }}>{t.title}</span>
+                              </div>
+                              <div style={{ flexShrink: 0, textAlign: 'right' }}>
+                                <div style={{ fontSize: 18, fontWeight: 800, color: simColor(t.simScore), lineHeight: 1 }}>{t.simScore}%</div>
+                                <div style={{ fontSize: 10, color: simColor(t.simScore), fontWeight: 600 }}>{simLabel(t.simScore)}</div>
+                              </div>
+                            </div>
+                            <div style={{ height: 4, background: '#F3F4F6', borderRadius: 2, overflow: 'hidden', marginBottom: 8 }}>
+                              <div style={{ width: t.simScore + '%', height: '100%', background: simColor(t.simScore), borderRadius: 2 }} />
+                            </div>
+                            <div style={{ display: 'flex', gap: 12, fontSize: 12, color: '#6B7280', flexWrap: 'wrap' }}>
+                              {t.student && <span>👤 {t.student}</span>}
+                              {t.advisor && <span>🎓 {t.advisor}</span>}
+                              {t.year && <span>📅 {t.year}</span>}
+                              {t.field && <span>🏷 {t.field}</span>}
+                            </div>
+                            {t.abstract && (
+                              <div style={{ marginTop: 8, fontSize: 12, color: '#6B7280', lineHeight: 1.5 }}>
+                                {t.abstract.length > 120 ? t.abstract.slice(0, 120) + '...' : t.abstract}
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ) : (
+                    <div style={{ textAlign: 'center', padding: '24px 0', color: '#9CA3AF', fontSize: 13 }}>
+                      ✅ Không tìm thấy đề tài nào tương đồng trong kho
+                    </div>
+                  )}
+
+                  <button onClick={() => { setCheckResult(null); setCheckTitle(''); setCheckAbstract(''); setCheckKeywords(''); }}
+                    style={{ marginTop: 16, width: '100%', padding: '8px 0', border: '1px solid #E5E7EB', borderRadius: 8, background: '#fff', fontSize: 13, color: '#6B7280', cursor: 'pointer', fontFamily: 'inherit' }}>
+                    Kiểm tra đề tài khác
+                  </button>
+                </div>
+              )}
+            </div>
+          </Card>
+        )}
+
         {tab === 'submit' && (
           <Card>
             <SectionHeader title="Nộp đề tài để lưu vào kho" />
