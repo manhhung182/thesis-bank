@@ -8,11 +8,6 @@ import { findSimilar } from '../lib/similarity';
 const currentYear = new Date().getFullYear();
 const YEARS = Array.from({ length: 5 }, (_, i) => currentYear - i);
 const FIELD_COLORS = ['#1A56DB','#0E9F6E','#F59E0B','#8B5CF6','#EF4444','#06B6D4','#F97316','#84CC16'];
-const normalize = (str) =>
-  (str ?? '').toLowerCase()
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .replace(/đ/g, 'd');
 
 function StatBox({ icon, value, label, bg }) {
   return (
@@ -63,16 +58,15 @@ export default function PublicPage({ theses, loading, onSubmit, onShowLogin }) {
   const approvedTheses = useMemo(() => theses.filter(t => t.status === 'approved'), [theses]);
 
   const filtered = useMemo(() => approvedTheses.filter((t) => {
-    const words = normalize(search).split(/\s+/).filter(Boolean);
-    const matchSearch = words.length === 0 || words.every(word =>
-      normalize(t.title).includes(word) ||
-      normalize(t.student).includes(word) ||
-      normalize(t.advisor).includes(word) ||
-      normalize(t.keywords?.join(' ')).includes(word) ||
-      normalize(t.allStudentNames?.join(' ')).includes(word) ||
-      normalize(t.allStudentMSSV?.join(' ')).includes(word) ||
-      normalize(t.field).includes(word)
-    );
+    const q = search.toLowerCase();
+    const matchSearch = !q ||
+      t.title?.toLowerCase().includes(q) ||
+      t.student?.toLowerCase().includes(q) ||
+      t.advisor?.toLowerCase().includes(q) ||
+      t.keywords?.some(k => k.toLowerCase().includes(q)) ||
+      t.allStudentNames?.some(n => n.toLowerCase().includes(q)) ||
+      t.allStudentMSSV?.some(m => m.toLowerCase().includes(q)) ||
+      t.field?.toLowerCase().includes(q);
     const matchType = filterType === 'all' || t.type === filterType;
     return matchSearch && matchType;
   }).sort((a, b) => {
