@@ -66,7 +66,8 @@ export default function Analytics({ stats, theses, onOpenDetail }) {
   const maxYear = yearStats.length > 0 ? Math.max(...yearStats.map(y => y.count)) : 1;
   const maxField = fieldStats.length > 0 ? Math.max(...fieldStats.map(f => f.count)) : 1;
 
-  const highRiskTheses = theses.filter(t => (t.similarity || 0) >= 60 && t.status === 'approved');
+  const highRiskTheses = theses.filter(t => (t.similarity || 0) >= 60 && t.status === 'approved')
+    .sort((a, b) => (b.year || 0) - (a.year || 0));
 
   return (
     <div className="animate-fade-in">
@@ -191,34 +192,36 @@ export default function Analytics({ stats, theses, onOpenDetail }) {
             ✅ Không có đề tài nào có độ tương đồng cao
           </div>
         ) : (
-          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
-            <thead style={{ background: 'var(--gray-50)' }}>
-              <tr>{['Tên đề tài','Sinh viên','Năm','Độ tương đồng',''].map(h => (
-                <th key={h} style={{ padding: '10px 16px', textAlign: 'left', fontSize: 11, fontWeight: 600, color: 'var(--gray-500)', textTransform: 'uppercase', letterSpacing: '.4px' }}>{h}</th>
-              ))}</tr>
-            </thead>
-            <tbody>
-              {highRiskTheses.map(t => (
-                <tr key={t.id} style={{ borderTop: '1px solid var(--gray-100)' }}
-                  onMouseEnter={e => e.currentTarget.style.background = 'var(--gray-50)'}
-                  onMouseLeave={e => e.currentTarget.style.background = ''}>
-                  <td style={{ padding: '12px 16px' }}>
-                    <span onClick={() => onOpenDetail(t.id)} style={{ fontWeight: 600, color: 'var(--gray-800)', cursor: 'pointer' }}
-                      onMouseEnter={e => e.target.style.color = 'var(--primary)'}
-                      onMouseLeave={e => e.target.style.color = 'var(--gray-800)'}>{t.title}</span>
-                  </td>
-                  <td style={{ padding: '12px 16px', fontSize: 12, color: 'var(--gray-600)' }}>{t.student}</td>
-                  <td style={{ padding: '12px 16px', fontSize: 12, color: 'var(--gray-500)' }}>{t.year}</td>
-                  <td style={{ padding: '12px 16px', minWidth: 140 }}><SimilarityBar value={t.similarity || 0} /></td>
-                  <td style={{ padding: '12px 16px' }}>
-                    <button onClick={() => onOpenDetail(t.id)} style={{ padding: '4px 10px', border: '1px solid var(--gray-200)', borderRadius: 6, fontSize: 12, background: '#fff', cursor: 'pointer', fontFamily: 'inherit', color: 'var(--gray-600)' }}>
-                      Chi tiết
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+          <div style={{ maxHeight: 280, overflowY: 'auto' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+              <thead style={{ background: 'var(--gray-50)' }}>
+                <tr>{['Tên đề tài','Sinh viên','Năm','Độ tương đồng',''].map(h => (
+                  <th key={h} style={{ padding: '10px 16px', textAlign: 'left', fontSize: 11, fontWeight: 600, color: 'var(--gray-500)', textTransform: 'uppercase', letterSpacing: '.4px' }}>{h}</th>
+                ))}</tr>
+              </thead>
+              <tbody>
+                {highRiskTheses.map(t => (
+                  <tr key={t.id} style={{ borderTop: '1px solid var(--gray-100)' }}
+                    onMouseEnter={e => e.currentTarget.style.background = 'var(--gray-50)'}
+                    onMouseLeave={e => e.currentTarget.style.background = ''}>
+                    <td style={{ padding: '12px 16px' }}>
+                      <span onClick={() => onOpenDetail(t.id)} style={{ fontWeight: 600, color: 'var(--gray-800)', cursor: 'pointer' }}
+                        onMouseEnter={e => e.target.style.color = 'var(--primary)'}
+                        onMouseLeave={e => e.target.style.color = 'var(--gray-800)'}>{t.title}</span>
+                    </td>
+                    <td style={{ padding: '12px 16px', fontSize: 12, color: 'var(--gray-600)' }}>{t.student}</td>
+                    <td style={{ padding: '12px 16px', fontSize: 12, color: 'var(--gray-500)' }}>{t.year}</td>
+                    <td style={{ padding: '12px 16px', minWidth: 140 }}><SimilarityBar value={t.similarity || 0} /></td>
+                    <td style={{ padding: '12px 16px' }}>
+                      <button onClick={() => onOpenDetail(t.id)} style={{ padding: '4px 10px', border: '1px solid var(--gray-200)', borderRadius: 6, fontSize: 12, background: '#fff', cursor: 'pointer', fontFamily: 'inherit', color: 'var(--gray-600)' }}>
+                        Chi tiết
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         )}
       </Card>
     </div>
