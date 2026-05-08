@@ -66,7 +66,7 @@ export default function Analytics({ stats, theses, onOpenDetail }) {
   const maxYear = yearStats.length > 0 ? Math.max(...yearStats.map(y => y.count)) : 1;
   const maxField = fieldStats.length > 0 ? Math.max(...fieldStats.map(f => f.count)) : 1;
 
-  const highRiskTheses = theses.filter(t => (t.similarity || 0) >= 50 && t.status === 'approved');
+  const highRiskTheses = theses.filter(t => (t.similarity || 0) >= 60 && t.status === 'approved');
 
   return (
     <div className="animate-fade-in">
